@@ -387,27 +387,6 @@ class FileOrganizerApp(QMainWindow):
                     selection-background-color: #2d82b7;
                     selection-color: white;
                 }
-                QTreeWidget::branch:has-children:!has-siblings:closed,
-                QTreeWidget::branch:closed:has-children:has-siblings {
-                    border-image: none;
-                    image: url(branch-closed.png);  /* You can use a system-provided icon */
-                    background-color: #3a3a3a;  /* Highlight the indicator background */
-                }
-                QTreeWidget::branch:open:has-children:!has-siblings,
-                QTreeWidget::branch:open:has-children:has-siblings {
-                    border-image: none;
-                    image: url(branch-open.png);  /* You can use a system-provided icon */
-                    background-color: #3a3a3a;  /* Highlight the indicator background */
-                }
-                QTreeWidget::branch:has-children:!has-siblings:closed,
-                QTreeWidget::branch:closed:has-children:has-siblings {
-                    image: url(arrow-right.png);  /* Use a standard arrow indicator */
-                }
-                QTreeWidget::branch:open:has-children:!has-siblings,
-                QTreeWidget::branch:open:has-children:has-siblings {
-                    image: url(arrow-down.png);  /* Use a standard arrow indicator */
-                }
-
                 QTreeWidget::item {
                     height: 30px;
                     border-bottom: 1px solid #2a2a2a;
@@ -499,6 +478,7 @@ class FileOrganizerApp(QMainWindow):
                     background: none;
                 }
             """)
+            
     
     def create_path_section(self):
         """Create the path selection section"""
@@ -618,14 +598,74 @@ class FileOrganizerApp(QMainWindow):
         self.tree_widget.setAlternatingRowColors(True)  # Alternate row colors
         self.tree_widget.setAnimated(True)  # Animated expanding/collapsing
         self.tree_widget.setHeaderHidden(True)  # Show header
+        self.tree_widget.setIndentation(30)  # Consistent indentation for hierarchy
+        self.tree_widget.setUniformRowHeights(True)  # For performance
         
         # Use a dark stylesheet specifically for the tree widget header to fix white bar
+        # Enhanced tree widget styling with better hierarchy indicators
+        # Enhanced tree widget styling with better hierarchy indicators
         self.tree_widget.setStyleSheet("""
             QHeaderView::section {
                 background-color: #2d2d2d;
                 color: white;
                 border: 1px solid #3a3a3a;
                 padding: 6px;
+            }
+            QTreeView {
+                show-decoration-selected: 1;
+            }
+            QTreeView::item {
+                border: none;
+                border-bottom: 1px solid #2a2a2a;
+                padding-left: 5px;
+            }
+            QTreeView::branch {
+                background: #1a1a1a;
+            }
+            QTreeView::branch:has-siblings:!adjoins-item {
+                border-image: none;
+                border-left: 1px solid #555555;
+            }
+            QTreeView::branch:has-siblings:adjoins-item {
+                border-image: none;
+                border-left: 1px solid #555555;
+            }
+            QTreeView::branch:!has-children:!has-siblings:adjoins-item {
+                border-image: none;
+                border-left: 1px solid #555555;
+            }
+            /* Custom styling for the collapse/expand arrows */
+            QTreeView::branch:has-children:!has-siblings:closed,
+            QTreeView::branch:closed:has-children:has-siblings {
+                background-color: transparent;
+                border-image: none;
+                image: url(arrow.png);
+            }
+            QTreeView::branch:has-children:!has-siblings:closed,
+            QTreeView::branch:closed:has-children:has-siblings {
+                background-color: transparent;
+                border-image: none;
+                image: url(arrow.png);
+                color: #aaaaaa;
+            }
+            QTreeView::branch:open:has-children:!has-siblings,
+            QTreeView::branch:open:has-children:has-siblings {
+                background-color: transparent;
+                border-image: none;
+                image: url(arrow_down.png);
+                color: #aaaaaa;
+            }
+            QTreeView::branch:closed:has-children {
+                border-image: none;
+                image: url(arrow.png);
+            }
+            QTreeView::branch:open:has-children {
+                border-image: none;
+                image: url(arrow_down.png);
+            }
+            QTreeView::indicator {
+                width: 13px;
+                height: 13px;
             }
         """)
         
@@ -836,6 +876,12 @@ class FileOrganizerApp(QMainWindow):
         
         # Build the tree widget
         root_item = QTreeWidgetItem(self.tree_widget, [os.path.basename(self.output_path)])
+        # Style the root item (output directory) distinctively
+        font = root_item.font(0)
+        font.setBold(True)
+        font.setPointSize(font.pointSize() + 1)  # Make it slightly larger
+        root_item.setFont(0, font)
+        root_item.setForeground(0, QColor("#3498db"))  # Green color for output root
         self.build_tree_widget(root_item, tree_dict)
         
         # Expand the root item
@@ -852,9 +898,17 @@ class FileOrganizerApp(QMainWindow):
                 # Add files as leaf nodes
                 for file_name in value:
                     file_item = QTreeWidgetItem(parent_item, [file_name])
+                    # Use different color for files to distinguish from directories
+                    file_item.setForeground(0, QColor("#bbbbbb"))
             else:
                 # Add directories as internal nodes
                 dir_item = QTreeWidgetItem(parent_item, [key])
+                # Make directories bold and with a different color
+                font = dir_item.font(0)
+                font.setBold(True)
+                dir_item.setFont(0, font)
+                dir_item.setForeground(0, QColor("#bbbbbb"))
+                
                 self.build_tree_widget(dir_item, value)
                 dir_item.setExpanded(True)
     
